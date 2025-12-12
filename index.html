@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Edad</title>
+    <!-- Luxon desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <!-- Flatpickr desde CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4a4a4a;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .calculator {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .input-group {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .date-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .date-input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .result.active {
+            display: block;
+        }
+        
+        .result h2 {
+            color: #4a4a4a;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .age-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin: 15px 0;
+        }
+        
+        .age-breakdown {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        
+        .age-unit {
+            text-align: center;
+        }
+        
+        .age-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #764ba2;
+        }
+        
+        .age-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .explanation {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f0f4ff;
+            border-radius: 15px;
+            text-align: left;
+        }
+        
+        .explanation h3 {
+            color: #4a4a4a;
+            margin-bottom: 15px;
+        }
+        
+        .explanation p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+            color: #555;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .age-display {
+                font-size: 2rem;
+            }
+            
+            .age-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Edad</h1>
+        <p class="subtitle">Descubre tu edad exacta en años, meses y días</p>
+        
+        <div class="calculator">
+            <div class="input-group">
+                <label for="birthdate">Selecciona tu fecha de nacimiento:</label>
+                <input type="text" id="birthdate" class="date-input" placeholder="Haz clic para seleccionar fecha">
+            </div>
+            
+            <button id="calculate" class="calculate-btn">Calcular Edad</button>
+            
+            <div id="error" class="error">Por favor, selecciona una fecha válida</div>
+            
+            <div id="result" class="result">
+                <h2>Tu edad exacta es:</h2>
+                <div class="age-display" id="age-display"></div>
+                <div class="age-breakdown">
+                    <div class="age-unit">
+                        <div class="age-value" id="years">0</div>
+                        <div class="age-label">Años</div>
+                    </div>
+                    <div class="age-unit">
+                        <div class="age-value" id="months">0</div>
+                        <div class="age-label">Meses</div>
+                    </div>
+                    <div class="age-unit">
+                        <div class="age-value" id="days">0</div>
+                        <div class="age-label">Días</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+      
+    </div>
+
+    <script>
+        // Inicializar Flatpickr
+        flatpickr("#birthdate", {
+            dateFormat: "d/m/Y",
+            maxDate: "today",
+            locale: {
+                firstDayOfWeek: 1,
+                weekdays: {
+                    shorthand: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+                    longhand: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
+                },
+                months: {
+                    shorthand: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                    longhand: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+                }
+            }
+        });
+        
+        // Obtener referencias a elementos DOM
+        const birthdateInput = document.getElementById('birthdate');
+        const calculateBtn = document.getElementById('calculate');
+        const resultDiv = document.getElementById('result');
+        const errorDiv = document.getElementById('error');
+        const ageDisplay = document.getElementById('age-display');
+        const yearsElement = document.getElementById('years');
+        const monthsElement = document.getElementById('months');
+        const daysElement = document.getElementById('days');
+        
+        // Función para calcular la edad
+        function calculateAge() {
+            const birthdateStr = birthdateInput.value;
+            
+            // Validar que se haya ingresado una fecha
+            if (!birthdateStr) {
+                showError();
+                return;
+            }
+            
+            // Convertir la fecha de formato dd/mm/yyyy a yyyy-mm-dd para Luxon
+            const parts = birthdateStr.split('/');
+            if (parts.length !== 3) {
+                showError();
+                return;
+            }
+            
+            const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            
+            // Crear objetos DateTime de Luxon
+            const birthdate = luxon.DateTime.fromISO(formattedDate);
+            const today = luxon.DateTime.now();
+            
+            // Validar que la fecha sea válida y no sea futura
+            if (!birthdate.isValid || birthdate > today) {
+                showError();
+                return;
+            }
+            
+            // Calcular la diferencia
+            const diff = today.diff(birthdate, ['years', 'months', 'days']).toObject();
+            
+            // Mostrar resultados
+            displayResults(Math.floor(diff.years), Math.floor(diff.months), Math.floor(diff.days));
+        }
+        
+        // Función para mostrar errores
+        function showError() {
+            errorDiv.classList.add('active');
+            resultDiv.classList.remove('active');
+        }
+        
+        // Función para mostrar resultados
+        function displayResults(years, months, days) {
+            errorDiv.classList.remove('active');
+            
+            // Actualizar elementos DOM
+            yearsElement.textContent = years;
+            monthsElement.textContent = months;
+            daysElement.textContent = days;
+            
+            // Crear texto descriptivo
+            let ageText = `${years} año${years !== 1 ? 's' : ''}`;
+            if (months > 0) {
+                ageText += `, ${months} mes${months !== 1 ? 'es' : ''}`;
+            }
+            if (days > 0) {
+                ageText += ` y ${days} día${days !== 1 ? 's' : ''}`;
+            }
+            
+            ageDisplay.textContent = ageText;
+            resultDiv.classList.add('active');
+        }
+        
+        // Agregar event listeners
+        calculateBtn.addEventListener('click', calculateAge);
+        
+        // También calcular al presionar Enter en el campo de fecha
+        birthdateInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateAge();
+            }
+        });
+    </script>
+</body>
+</html>
